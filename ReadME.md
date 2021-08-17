@@ -5,6 +5,9 @@ Installer : `bash -c "$(wget -qO- https://git.io/J0Igf)"`
 
 Updater   : `bash -c "$(wget -qO- https://git.io/J0Izx)"`
 
+Download OpenVPN Config using the format:
+  - `http://<IP or domain>/<IP>.ovpn`
+
 ### Ports:
   - 80 (SSH)
   - 8880 (OpenVPN)
