@@ -14,7 +14,9 @@ image=xdcb/smart-bypass:$cont
 
 if [ -d $loc ]; then
 echo "Updating SocksProxy..."
-if [ ! -f "$loc/server.conf" ]; then
+if [ -f "$loc/basic.conf" ]; then
+  mv $loc/basic.conf $loc/server.conf
+else
 cat << 'basic' > $loc/server.conf
 [ssh]
 timer = 0
@@ -27,6 +29,7 @@ sport = 8880
 dport = 1194
 basic
 fi
+[ -f $loc/message ] || echo "<font color=\"green\">Dexter Cellona Banawon (X-DCB)</font>" > $loc/message
 systemctl stop socksproxy
 docker rm -f $cont
 docker rmi -f $image
