@@ -1,9 +1,9 @@
 # SOCKS PROXY with Client Auto-Disconnect
 ## By Dexter Cellona Banawon
 
-Installer : `bash -c "$(wget -qO- https://git.io/JTHJJ)"`
+Installer : `bash -c "$(wget -qO- https://git.io/J0Igf)"`
 
-Updater   : `bash -c "$(wget -qO- https://git.io/JRMHG)"`
+Updater   : `bash -c "$(wget -qO- https://git.io/J0Izx)"`
 
 ### Ports:
   - 80 (SSH)
