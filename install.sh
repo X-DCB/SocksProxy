@@ -65,13 +65,14 @@ fi
 
 echo "Installing required packages."
 if [[ ! `type -P docker` ]]; then
-apt install apt-transport-https ca-certificates curl gnupg2 software-properties-common -y
+APT="apt -y"
+$APT install apt-transport-https ca-certificates curl gnupg2 software-properties-common
 curl -fsSL https://download.docker.com/linux/$ID/gpg | apt-key add - 
-add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/$ID $(lsb_release -cs) stable"
-apt update
+add-apt-repository -y "deb [arch=amd64] https://download.docker.com/linux/$ID $(lsb_release -cs) stable"
+$APT update
 apt-cache policy docker-ce
-apt install docker-ce -y
-apt clean; fi
+$APT install docker-ce
+$APT clean; fi
 
 echo "Installing OpenVPN."
 apt-get install -y openvpn
