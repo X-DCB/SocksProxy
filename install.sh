@@ -443,7 +443,7 @@ cat << msg
 msg
 read -p "    Username : " -e USER
 read -p "    Password : " -e PASS
-read -p "    Days     : " -e DAYS
+read -p "    Duration : " -e DAYS
 exp=`date -d "+$DAYS days" +%F`
 [ $DAYS ] && ex="-e $exp"
 useradd $ex -NM -s /bin/false $USER 2> /dev/null
@@ -453,7 +453,7 @@ cat << info
 ~ Account Info ~
 Username : $USER
 Password : $PASS
-Expiration Date : `[ $DAYS ] && echo $DAYS || echo "None"`
+Duration : `[ $DAYS ] && echo "$DAYS days" || echo "Lifetime"`
 
 ~ Server Ports ~
 OHP :
@@ -520,7 +520,7 @@ cd; echo "Optimizing server."
 cat << sysctl > /etc/sysctl.d/xdcb.conf
 net.ipv4.ip_forward=1
 net.ipv4.tcp_rmem=65535 131072 4194304
-net.ipv4.tcp_wmem=65535 131072 194304
+net.ipv4.tcp_wmem=65535 131072 4194304
 net.ipv4.ip_default_ttl=50
 net.ipv4.tcp_congestion_control=bbr
 net.core.wmem_default=262144
