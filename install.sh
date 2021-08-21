@@ -30,7 +30,6 @@ read -p "Press ENTER to continue..."
 
 clear
 . /etc/os-release
-MYIP=$(wget -qO- ipv4.icanhazip.com)
 
 echo "Configuring SSH."
 cd /etc/ssh
@@ -100,6 +99,7 @@ username-as-common-name
 verify-client-cert none
 plugin $opam login
 script-security 2
+duplicate-cn
 
 auth none
 cipher none
@@ -109,7 +109,7 @@ push "redirect-gateway def1 bypass-dhcp"
 push "dhcp-renew"
 push "block-outside-dns"
 push "register-dns"
-push "dhcp-option DNS 1.0.0.1"
+push "dhcp-option DNS 1.1.1.1"
 push "dhcp-option DNS 1.0.0.1"
 
 keepalive 5 60
@@ -320,11 +320,12 @@ echo "<font color=\"green\">Dexter Cellona Banawon (X-DCB)</font>" > $loc/messag
 web=$loc/web
 mkdir $web 2> /dev/null
 
+MYIP=$(wget -qO- ipv4.icanhazip.com)
 cat << ovpnconf > $web/$MYIP.ovpn
 client
 dev tun
 proto tcp
-remote $MYIP 1194
+remote 127.0.0.1 1194
 route-method exe
 mute-replay-warnings
 http-proxy $MYIP 8880
@@ -362,6 +363,9 @@ n9q7bvX39TPdCLzlGsfdrT+NOvn9XU1zWyz6
 </ca>
 ovpnconf
 
+systemctl stop squid 2> /dev/null
+systemctl disable squid 2> /dev/null
+
 docker run -d --name socksproxyX \
   -v $loc:/conf \
   --net host --cap-add NET_ADMIN xdcb/smart-bypass:socksproxyX
@@ -383,7 +387,7 @@ service
 
 systemctl daemon-reload
 systemctl enable socksproxy
-systemctl start socksproxy
+systemctl restart socksproxy openvpn@server
 
 cat << service > /etc/systemd/system/iptab.service
 [Unit]
