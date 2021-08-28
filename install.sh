@@ -23,7 +23,7 @@ cat << info
    - Beta Version
    - UDP Forwading
    - Static website support
-   - Downlaod files suuport
+   - File download suuport
    - TLS/SSL Proxy
    - Dropbear support
 
