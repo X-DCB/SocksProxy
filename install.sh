@@ -484,6 +484,9 @@ iptables -t filter -A FORWARD -j REJECT --reject-with icmp-port-unreachable
 iptabc
 
 chmod a+x /sbin/iptab
+systemctl daemon-reload
+systemctl restart iptab
+systemctl enable iptab
 
 echo "Installing BadVPN."
 docker run -d --restart always --name badvpn \
