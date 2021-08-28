@@ -23,10 +23,21 @@ cat << info
    - Beta Version
    - UDP Forwading
    - Static website support
+   - Downlaod files suuport
+   - TLS/SSL Proxy
+   - Dropbear support
 
 info
 
 read -p "Press ENTER to continue..."
+
+# Ports
+drbp=550
+ovpn=1194
+ws_ssh=80
+ws_ovpn=2082
+st_ssh=443
+st_ovpn=2083
 
 clear
 . /etc/os-release
@@ -64,7 +75,7 @@ fi
 
 echo "Installing required packages."
 if [[ ! `type -P docker` ]]; then
-APT="apt -y"
+APT="apt-get -y"
 $APT install apt-transport-https ca-certificates curl gnupg2 software-properties-common
 curl -fsSL https://download.docker.com/linux/$ID/gpg | apt-key add - 
 add-apt-repository -y "deb [arch=amd64] https://download.docker.com/linux/$ID $(lsb_release -cs) stable"
@@ -74,12 +85,12 @@ $APT install docker-ce
 $APT clean; fi
 
 echo "Installing OpenVPN."
-apt-get install -y openvpn
+$APT install openvpn
 opam=`find /usr -name openvpn*auth-pam.so`
 
 cd /etc/openvpn
 cat << ovpn > server.conf
-port 1194
+port $ovpn
 proto tcp
 dev tun
 
@@ -299,20 +310,65 @@ ovpndh
 
 systemctl restart openvpn@server; cd
 
+# Dropbear setup
+$APT install dropbear
+cat << drb > /etc/default/dropbear
+NO_START=0
+DROPBEAR_PORT=$drbp
+DROPBEAR_RSAKEY="/etc/dropbear/dropbear_rsa_host_key"
+DROPBEAR_DSSKEY="/etc/dropbear/dropbear_dss_host_key"
+DROPBEAR_ECDSAKEY="/etc/dropbear/dropbear_ecdsa_host_key"
+DROPBEAR_RECEIVE_WINDOW=65536
+drb
+systemctl restart dropbear
+
+# Stunnel setup
+$APT install stunnel4
+cat << stunnl > /etc/default/stunnel4
+ENABLED=1
+FILES="/etc/stunnel/*.conf"
+OPTIONS=""
+BANNER="/etc/banner"
+PPP_RESTART=0
+# RLIMITS="-n 4096 -d unlimited"
+RLIMITS=""
+stunnl
+sed -i '/ENABLED=/{s/0/1/g}' /etc/init.d/stunnel4
+rm -rf /etc/stunnel/*
+openssl req -new -x509 -days 9999 -nodes -subj "/C=PH/ST=-/L=-/O=-/OU=-/CN=-" -out /etc/stunnel/stunnel.pem -keyout /etc/stunnel/stunnel.pem &> /dev/null
+
+cat << stconf > /etc/stunnel/stunnel.conf
+pid = /var/run/stunnel.pid
+cert = /etc/stunnel/stunnel.pem
+client = no
+socket = a:SO_REUSEADDR=1
+socket = l:TCP_NODELAY=1
+socket = r:TCP_NODELAY=1
+TIMEOUTclose = 0
+
+[ws_ssh]
+accept = $st_ssh
+connect = 127.0.0.1:$ws_ssh
+
+[ws_openvpn]
+accept = $st_ovpn
+connect = 127.0.0.1:$ws_ovpn
+stconf
+
 echo "Installing socksproxy."
 loc=/etc/socksproxy
 mkdir $loc 2> /dev/null
 
-cat << 'basic' > $loc/server.conf
+cat << basic > $loc/server.conf
 [ssh]
 timer = 0
-sport = 80
-dport = 22
+sport = $ws_ssh
+dport = $drbp
 
 [openvpn]
 timer = 0
-sport = 8880
-dport = 1194
+sport = $ws_ovpn
+dport = $ovpn
 basic
 
 echo "<font color=\"green\">Dexter Cellona Banawon (X-DCB)</font>" > $loc/message
@@ -325,7 +381,7 @@ cat << ovpnconf > $web/$MYIP.ovpn
 client
 dev tun
 proto tcp
-remote 127.0.0.1 1194
+remote 127.0.0.1 $ovpn
 route-method exe
 mute-replay-warnings
 http-proxy $MYIP 8880
@@ -403,9 +459,9 @@ RemainAfterExit=yes
 WantedBy=network.target
 service
 
-cat << 'iptabc' > /sbin/iptab
+cat << iptabc > /sbin/iptab
 #!/bin/bash
-INET="$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)"
+INET="\$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)"
 iptables -F
 iptables -X
 iptables -F -t nat
@@ -413,14 +469,16 @@ iptables -X -t nat
 iptables -P INPUT ACCEPT
 iptables -P FORWARD ACCEPT
 iptables -P OUTPUT ACCEPT
-iptables -t nat -I POSTROUTING -o $INET -j MASQUERADE
+iptables -t nat -I POSTROUTING -o \$INET -j MASQUERADE
 iptables -A INPUT -j ACCEPT
 iptables -A FORWARD -j ACCEPT
 iptables -I FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
 iptables -A OUTPUT -p tcp -m state --state ESTABLISHED --sport 22 -j ACCEPT
+iptables -A OUTPUT -p tcp -m state --state ESTABLISHED --sport $drbp -j ACCEPT
 iptables -A INPUT -p udp -m state --state ESTABLISHED --sport 53 -j ACCEPT
 iptables -A OUTPUT -p udp -m state --state NEW,ESTABLISHED --dport 53 -j ACCEPT
 iptables -A INPUT -p tcp -m state --state NEW,ESTABLISHED --dport 22 -j ACCEPT
+iptables -A INPUT -p tcp -m state --state NEW,ESTABLISHED --dport $drbp -j ACCEPT
 iptables -t filter -A FORWARD -j REJECT --reject-with icmp-port-unreachable
 iptabc
 
@@ -464,13 +522,13 @@ OHP :
 info
 IFS=$'\n' arr=`cat /etc/socksproxy/server.conf`
 for line in $arr; do
-	[ `grep "^sport" <<< "$line"` ] && s=$((line))
-	[ `grep "^timer" <<< "$line"` ] && t=$((line))
-	if [[ $t && $s ]]; then
-		[ $t -ge 30 ] && t+="s" || t="No"
-		echo "   - $s ($t timer)"
-		unset t s
-	fi
+    [ `grep "^sport" <<< "$line"` ] && s=$((line))
+    [ `grep "^timer" <<< "$line"` ] && t=$((line))
+    if [[ $t && $s ]]; then
+        [ $t -ge 30 ] && t+="s" || t="No"
+        echo "   - $s ($t timer)"
+        unset t s
+    fi
 done
 echo "SSH :"
 netstat -tulpn | egrep "tcp .+ssh" | egrep -o ":[0-9]{2,}" | sed -e "s/:/   - /g"
@@ -497,11 +555,11 @@ exit 0
 }
 case $1 in
 accadd)
-	add;;
+    add;;
 accdel)
-	del;;
+    del;;
 acclist)
-	list;;
+    list;;
 esac
 cat << msg
 
@@ -545,7 +603,16 @@ cat << info | tee ~/socksproxylog.txt
   ====================================
 | Installation finished.              |
 | Service Name: socksproxy            |
-| Ports: 80 (SSH), 8880 (OpenVPN)     |
+| Ports:                              |
+|   - SSH: 22                         |
+|   - Dropbear: 550                   |
+|   - OpenVPN: 1194 (TCP)             |
+|   - WebSocket                       |
+|         80   (SSH/Dropbear)         |
+|         2082 (OpenVPN)              |
+|   - Stunnel:                        |
+|         443  (WS + SSH/Dropbear)    |
+|         2083 (WS + OpenVPN)         |
 | Log output: /root/socksproxylog.txt |
 | =================================== |
 | Use "xdcb" for the menu             |
