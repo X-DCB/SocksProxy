@@ -354,6 +354,7 @@ connect = 127.0.0.1:$ws_ssh
 accept = $st_ovpn
 connect = 127.0.0.1:$ws_ovpn
 stconf
+systemctl restart stunnel4
 
 echo "Installing socksproxy."
 loc=/etc/socksproxy
