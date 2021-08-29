@@ -11,7 +11,7 @@ if [ ! -f /etc/debian* ]; then
 cat << info
 
  ==================================
-|    Socks Proxy for SocksHttp     |
+|           SocksProxy             |
 |    by Dexter Cellona Banawon     |
  ==================================
    - Client Auto-Disconnect
@@ -430,7 +430,7 @@ docker run -d --name socksproxyX \
 echo "Adding service: socksproxy"
 cat << service > /etc/systemd/system/socksproxy.service
 [Unit]
-Description=Socks Proxy
+Description=SocksProxy
 Wants=network.target
 After=network.target
 [Service]
