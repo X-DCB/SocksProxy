@@ -15,7 +15,7 @@ Download OpenVPN Config using the format:
   - 80 (WS + SSH/Dropbear)
   - 2082 (WS + OpenVPN)
   - 443 (TLS/SSL + WS + SSH/Dropbear)
-  - 8443 (TLS/SSL + WS + OpenVPN)
+  - 2083 (TLS/SSL + WS + OpenVPN)
 
 ### Downloads
   1. Put the files inside `/etc/socksproxy/web` directory.
