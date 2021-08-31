@@ -498,6 +498,9 @@ echo "Adding menu 'xdcb'."
 bin=/usr/local/bin
 cat << 'menu' > $bin/xdcb
 #!/bin/bash
+if [ "$(id -u)" -ne 0 ]; then
+  echo -ne "\nPlease execute this script as root.\n"
+  exit 1; fi
 add() {
 cat << msg
 
