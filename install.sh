@@ -66,6 +66,8 @@ password  [success=1 default=ignore]  pam_unix.so obscure sha512
 password  requisite     pam_deny.so
 password  required      pam_permit.so
 common
+sed -i '/\/bin\/false/d;/\/usr\/sbin\/nologin/d' /etc/shells
+echo -e "/bin/false\n/usr/sbin/nologin" >> /etc/shells
 cd; systemctl restart sshd
 if [[ $needpass ]];then
   echo "You need to change the password."
