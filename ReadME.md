@@ -1,6 +1,9 @@
 # SocksProxy with Client Auto-Disconnect
 ## By Dexter Cellona Banawon
 
+[![Stars](https://img.shields.io/github/stars/X-DCB/SocksProxy)]()
+[![Forks](https://img.shields.io/github/forks/X-DCB/SocksProxy)]()
+
 Installer : `bash -c "$(wget -qO- https://git.io/J0Igf)"`
 
 Updater   : `bash -c "$(wget -qO- https://git.io/J0Izx)"`
