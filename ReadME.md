@@ -22,7 +22,9 @@ Download OpenVPN Config using the format:
 
 ### Downloads
   1. Put the files inside `/etc/socksproxy/web` directory.
-  2. Restart `socksproxy` via `systemctl` command.
+  2. Download the file using the format:
+
+`http://<IP or Domain>/<file name + extension>
 
 ### Server Response Message
   1. Edit/Create `/etc/socksproxy/message` file.
