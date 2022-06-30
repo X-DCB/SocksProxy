@@ -1,6 +1,8 @@
 # SocksProxy with Client Auto-Disconnect
 ## By Dexter Cellona Banawon
 
+![image](https://user-images.githubusercontent.com/28706220/176683719-2153a479-d97d-43ee-a932-ea5284e5b78d.png)
+
 [![Stars](https://img.shields.io/github/stars/X-DCB/SocksProxy)]()
 [![Forks](https://img.shields.io/github/forks/X-DCB/SocksProxy)]()
 
